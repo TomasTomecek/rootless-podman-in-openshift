@@ -1,0 +1,43 @@
+# An ansible playbook which runs fedora:28 as an openshift pod
+# It prepa
+---
+- hosts: localhost
+  vars:
+    pod_name: podman
+    username: podm
+  tasks:
+  - command: oc delete po {{ pod_name }}
+    ignore_errors: true
+  - name: wait for the pod to be deleted
+    command: oc get po {{ pod_name }}
+    register: po_podman
+    until: po_podman.stderr.find("not found") > 0
+    retries: 20
+    delay: 1
+    ignore_errors: true
+  - assert:
+      that: 'po_podman.stderr.find("not found") > 0'
+  - command: oc run podman --image=rootless-podman --restart=Never --command -- sleep infinity
+  - name: wait for the pod to come up
+    command: oc get po {{ pod_name }}
+    register: po_podman
+    until: po_podman.stdout.find("Running") != -1
+    retries: 5
+    delay: 1
+  - name: Get user id
+    command: oc exec {{ pod_name }} -- id -u
+    register: user_id
+  - name: Ensure /src/passwd exists
+    command: oc exec {{ pod_name }} -- ls -lha /src/passwd
+    register: src_passwd
+  - debug:
+      msg: "{{ src_passwd.stdout }}"
+  - name: Prepare passwd
+    command: oc exec {{ pod_name }} -- printf '{{ username }}:x:{{ user_id.stdout }}:0:Rootless Podman:/src:/bin/bash\n' '>>/src/passwd'
+  - name: Get info about current user
+    command: oc exec {{ pod_name }} -- id
+    register: id_cmd
+  - name: Make sure that we run as podm user
+    assert:
+      that: 'id_cmd.stdout.find("podm") > 0'
+

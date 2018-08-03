@@ -1,0 +1,1 @@
+working-container ansible_connection=docker ansible_python_interpreter=/usr/bin/python3

@@ -1,0 +1,28 @@
+# An ansible playbook to prepare container image with podman
+---
+- hosts: all
+  tasks:
+  # - debug:
+  #     msg: "User: {{ ansible_user_id }}"
+  - dnf:
+      name: '{{ item }}'
+      state: latest
+    with_items:
+      - nss_wrapper
+      - podman
+  - file:
+      state: directory
+      path: /src
+      mode: 0777
+  - copy:
+      src: ./passwd
+      dest: /src/passwd
+      mode: 0777
+  - copy:
+      src: ./subuid
+      dest: /etc/subuid
+      mode: 0644
+  - copy:
+      src: ./subgid
+      dest: /etc/subgid
+      mode: 0644
