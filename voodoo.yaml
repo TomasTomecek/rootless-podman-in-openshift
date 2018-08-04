@@ -5,35 +5,40 @@
   vars:
     pod_name: podman
     username: podm
+    recreate: 'true'
   tasks:
-  - command: oc delete po {{ pod_name }}
-    ignore_errors: true
-  - name: wait for the pod to be deleted
-    command: oc get po {{ pod_name }}
-    register: po_podman
-    until: po_podman.stderr.find("not found") > 0
-    retries: 20
-    delay: 1
-    ignore_errors: true
-  - assert:
-      that: 'po_podman.stderr.find("not found") > 0'
-  - command: oc run podman --image=rootless-podman --restart=Never --command -- sleep infinity
+  - name: recreate podman pod
+    block:
+    - name: delete the pod from previus run
+      command: oc delete po {{ pod_name }}
+      ignore_errors: true
+    - name: wait for the pod to be deleted
+      command: oc get po {{ pod_name }}
+      register: po_podman
+      until: po_podman.stderr.find("not found") > 0
+      retries: 20
+      delay: 1
+      ignore_errors: true
+    - assert:
+        that: 'po_podman.stderr.find("not found") > 0'
+    - command: oc run {{ pod_name }} --image=rootless-podman --restart=Never --command -- sleep infinity
+    when: recreate == 'true'
   - name: wait for the pod to come up
     command: oc get po {{ pod_name }}
     register: po_podman
     until: po_podman.stdout.find("Running") != -1
-    retries: 5
+    retries: 20
     delay: 1
   - name: Get user id
     command: oc exec {{ pod_name }} -- id -u
     register: user_id
-  - name: Ensure /src/passwd exists
-    command: oc exec {{ pod_name }} -- ls -lha /src/passwd
-    register: src_passwd
+  - name: Ensure /home/podm/passwd exists
+    command: oc exec {{ pod_name }} -- ls -lha /home/podm/passwd
+    register: passwd_file
   - debug:
-      msg: "{{ src_passwd.stdout }}"
+      msg: "{{ passwd_file.stdout }}"
   - name: Prepare passwd
-    command: oc exec {{ pod_name }} -- printf '{{ username }}:x:{{ user_id.stdout }}:0:Rootless Podman:/src:/bin/bash\n' '>>/src/passwd'
+    command: oc exec {{ pod_name }} -- bash -c "printf '{{ username }}:x:{{ user_id.stdout }}:0:Rootless Podman:/home/podm:/bin/bash\n' >>/home/podm/passwd"
   - name: Get info about current user
     command: oc exec {{ pod_name }} -- id
     register: id_cmd

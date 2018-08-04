@@ -7,16 +7,24 @@
   - dnf:
       name: '{{ item }}'
       state: latest
+      enablerepo: updates-testing
     with_items:
       - nss_wrapper
-      - podman
+      - https://kojipkgs.fedoraproject.org//packages/podman/0.8.1/1.git6b4ab2a.fc28/x86_64/podman-0.8.1-1.git6b4ab2a.fc28.x86_64.rpm
+      - conmon
+      # - podman
+  - user:
+      name: podm
+      create_home: yes
+      home: /home/podm
   - file:
       state: directory
-      path: /src
+      path: /home
       mode: 0777
+      recurse: yes
   - copy:
       src: ./passwd
-      dest: /src/passwd
+      dest: /home/podm/passwd
       mode: 0777
   - copy:
       src: ./subuid
