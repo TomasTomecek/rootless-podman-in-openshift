@@ -1,12 +1,13 @@
 CONT_NAME := working-container
 IMAGE_NAME := rootless-podman
 BASE_IMAGE_NAME := fedora:28
+AP := ansible-playbook -i inventory-localhost -c local
 
 run:
-	ansible-playbook ./voodoo.yaml
+	$(AP) ./voodoo.yaml
 
 run-cached:
-	ansible-playbook -e recreate=false -v ./voodoo.yaml
+	$(AP) -e recreate=false -v ./voodoo.yaml
 
 build:
 	docker image inspect $(BASE_IMAGE_NAME) >/dev/null || docker pull $(BASE_IMAGE_NAME) >/dev/null
