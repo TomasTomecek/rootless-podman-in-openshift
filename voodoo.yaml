@@ -3,10 +3,12 @@
 ---
 - hosts: localhost
   vars:
-    pod_name: podman
     username: podm
     recreate: 'true'
   tasks:
+  - name: generate an arbitrary pod name
+    set_fact:
+      pod_name: 'podman-in-okd-{{ ansible_date_time.iso8601_basic | lower }}'
   - name: recreate podman pod
     block:
     - name: delete the pod from previus run

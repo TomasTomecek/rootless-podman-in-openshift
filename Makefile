@@ -1,6 +1,6 @@
 CONT_NAME := working-container
 IMAGE_NAME := rootless-podman
-BASE_IMAGE_NAME := fedora:28
+BASE_IMAGE_NAME := fedora:29
 AP := ansible-playbook -i inventory-localhost -c local
 
 run:
