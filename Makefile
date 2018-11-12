@@ -1,6 +1,6 @@
 CONT_NAME := working-container
 IMAGE_NAME := rootless-podman
-BASE_IMAGE_NAME := fedora:29
+BASE_IMAGE_NAME := registry.fedoraproject.org/fedora:29
 AP := ansible-playbook -i inventory-localhost -c local
 
 run:
@@ -8,6 +8,9 @@ run:
 
 run-cached:
 	$(AP) -e recreate=false -v ./voodoo.yaml
+
+build-w-ab:
+	ab build ./build.yaml $(BASE_IMAGE_NAME) rootless-podman
 
 build:
 	docker image inspect $(BASE_IMAGE_NAME) >/dev/null || docker pull $(BASE_IMAGE_NAME) >/dev/null
@@ -37,6 +40,3 @@ build-incr:
 		-c "ENV HOME=/home/podm" \
 		$(CONT_NAME) $(IMAGE_NAME)
 	docker rm $(CONT_NAME)
-
-shell:
-	oc exec -ti podman -- bash

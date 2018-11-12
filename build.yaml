@@ -12,6 +12,7 @@
       - nss_wrapper
       - podman
       - conmon
+      - shadow-utils
   - user:
       name: podm
       create_home: yes

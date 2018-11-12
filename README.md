@@ -20,7 +20,10 @@ $ make run
 
 And now you can play with podman!
 ```
-$ make shell
-oc exec -ti podman -- bash
+$ oc get all
+ NAME                                      READY     STATUS    RESTARTS   AGE
+ pod/podman-in-okd-20181112t130610199320   1/1       Running   0          14s
+
+$ oc exec -ti podman-in-okd-20181112t130610199320 -- bash
 bash-4.4$ podman --storage-driver=vfs pull fedora:29
 ```
