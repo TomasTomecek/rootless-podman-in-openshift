@@ -2,21 +2,20 @@
 ---
 - hosts: all
   tasks:
-  # - debug:
-  #     msg: "User: {{ ansible_user_id }}"
   - dnf:
-      name: '{{ item }}'
-      state: latest
-      enablerepo: updates-testing
-    with_items:
+      name:
       - nss_wrapper
       - podman
       - conmon
       - shadow-utils
+      state: latest
+      enablerepo: updates-testing
   - user:
       name: podm
       create_home: yes
       home: /home/podm
+    tags:
+    - stop-layering
   - file:
       state: directory
       path: /home

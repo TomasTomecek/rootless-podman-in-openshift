@@ -2,7 +2,13 @@
 
 ## Usage
 
-Build an image with podman first:
+Install tools to build the image:
+```
+$ pip3 install --user ansible-bender
+$ sudo dnf install -y podman buildah
+```
+
+Build the image which we'll launch in openshift:
 ```
 $ make build
 ```
