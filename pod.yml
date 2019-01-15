@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: rp  # (r)ootless (p)odman
+spec:
+  containers:
+  - command: ["bash"]
+    image: docker.io/rootless-podman
+    imagePullPolicy: Never
+    name: rp
+    stdin: true
+    tty: true
+    # we still need privileged, buildah can't mount:
+    # level=error msg="'overlay' is not supported over xfs at "/var/lib/containers/storage/overlay""
+    # could not get runtime: kernel does not support overlay fs: 'overlay' is not supported over xfs at "/var/lib/containers/storage/overlay"
+    # : backing file system is unsupported for this graph driver
+    volumeMounts:
+    - mountPath: /home/podm/.config/containers
+      name: graph
+    env:
+    # - name: BUILD_ISOLATION
+    #   value: chroot
+    - name: PYTHONDONTWRITEBYTECODE
+      value: ano
+  restartPolicy: Never
+  volumes:
+  - name: graph
+    emptyDir: {}

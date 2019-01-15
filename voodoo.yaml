@@ -5,17 +5,15 @@
   vars:
     username: podm
     recreate: 'true'
+    pod: rp  # name of the pod
   tasks:
-  - name: generate an arbitrary pod name
-    set_fact:
-      pod_name: 'podman-in-okd-{{ ansible_date_time.iso8601_basic | lower }}'
   - name: recreate podman pod
     block:
     - name: delete the pod from previus run
-      command: oc delete po {{ pod_name }}
+      command: oc delete po {{ pod }}
       ignore_errors: true
     - name: wait for the pod to be deleted
-      command: oc get po {{ pod_name }}
+      command: oc get po {{ pod }}
       register: po_podman
       until: po_podman.stderr.find("not found") > 0
       retries: 20
@@ -23,26 +21,26 @@
       ignore_errors: true
     - assert:
         that: 'po_podman.stderr.find("not found") > 0'
-    - command: oc run {{ pod_name }} --image=rootless-podman --restart=Never --command -- sleep infinity
+    - command: oc create -f ./pod.yml
     when: recreate == 'true'
   - name: wait for the pod to come up
-    command: oc get po {{ pod_name }}
+    command: oc get po {{ pod }}
     register: po_podman
     until: po_podman.stdout.find("Running") != -1
     retries: 20
     delay: 1
   - name: Get user id
-    command: oc exec {{ pod_name }} -- id -u
+    command: oc exec {{ pod }} -- id -u
     register: user_id
   - name: Ensure /home/podm/passwd exists
-    command: oc exec {{ pod_name }} -- ls -lha /home/podm/passwd
+    command: oc exec {{ pod }} -- ls -lha /home/podm/passwd
     register: passwd_file
   - debug:
       msg: "{{ passwd_file.stdout }}"
   - name: Prepare passwd
-    command: oc exec {{ pod_name }} -- bash -c "printf '{{ username }}:x:{{ user_id.stdout }}:0:Rootless Podman:/home/podm:/bin/bash\n' >>/home/podm/passwd"
+    command: oc exec {{ pod }} -- bash -c "printf '{{ username }}:x:{{ user_id.stdout }}:0:Rootless Podman:/home/podm:/bin/bash\n' >>/home/podm/passwd"
   - name: Get info about current user
-    command: oc exec {{ pod_name }} -- id
+    command: oc exec {{ pod }} -- id
     register: id_cmd
   - name: Make sure that we run as podm user
     assert:
