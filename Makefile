@@ -3,7 +3,7 @@ IMAGE_NAME := rootless-podman
 BASE_IMAGE_NAME := registry.fedoraproject.org/fedora:29
 AP := ansible-playbook -i inventory-localhost -c local
 
-ifeq (, $(shell which ab))
+ifeq (, $(shell which ansible-bender))
 	$(error "Please install ansible-bender (pip3 install --user ansible-bender), podman and buildah (dnf install -y podman buildah).")
 endif
 
@@ -14,14 +14,14 @@ run-cached:
 	$(AP) -e recreate=false -v ./voodoo.yaml
 
 build:
-	ab build \
+	sudo ansible-bender build \
 		-e "LD_PRELOAD=libnss_wrapper.so" \
 		   "NSS_WRAPPER_PASSWD=/home/podm/passwd" \
 		   "NSS_WRAPPER_GROUP=/etc/group" \
 		   "USER=podm" \
 		   "HOME=/home/podm" -- \
 		./build.yaml $(BASE_IMAGE_NAME) $(IMAGE_NAME)
-	ab push docker-daemon:$(IMAGE_NAME):latest
+	sudo ansible-bender push docker-daemon:$(IMAGE_NAME):latest
 
 old-build:
 	docker image inspect $(BASE_IMAGE_NAME) >/dev/null || docker pull $(BASE_IMAGE_NAME) >/dev/null
