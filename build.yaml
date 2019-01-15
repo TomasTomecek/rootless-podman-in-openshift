@@ -8,6 +8,10 @@
       - podman
       - conmon
       - shadow-utils
+      - buildah
+      - iputils
+      - iproute
+      - binutils
       state: latest
       enablerepo: updates-testing
   - user:
